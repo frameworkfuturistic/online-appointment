@@ -19,10 +19,9 @@ use Illuminate\Support\Facades\Route;
 //     return view('index');
 // });
 
-
 // Route::inertia('/book-appointment', 'BookAppointment');
 
 Route::controller(AppointmentController::class)->group(function () {
-    Route::get('/', 'bookAppointmentView');
+    Route::get('/{hospitalId}', 'bookAppointmentView');
     Route::post('/book-appointment', 'bookAppointment');
 });

@@ -8,6 +8,7 @@ export default function BookAppointment({
     shifts,
     states,
     cities,
+    hospital,
 }) {
     // Error and Success Messages
     const [errorMessage, setErrorMessage] = useState(null);
@@ -191,7 +192,7 @@ export default function BookAppointment({
                                     loading="lazy"
                                     className="form-image"
                                     style={{ border: 0 }}
-                                    src="http://sjhrc.in/images/hospitallogo.png"
+                                    src={hospital.logo}
                                     tabIndex={0}
                                     height="99px"
                                     width="102px"
@@ -224,21 +225,18 @@ export default function BookAppointment({
                                     >
                                         {/***/}
                                         <div style={{ fontSize: "12pt" }}>
-                                            <strong>
-                                                Shree Jagannath Hospital &amp;
-                                                Research Center
-                                            </strong>
+                                            <strong>{hospital.name}</strong>
                                         </div>
                                         <div style={{ fontSize: "10pt" }} />
                                         <div>
                                             <div style={{ fontSize: "8pt" }}>
-                                                sjhrc.ranchi@gmail.com
+                                                {hospital.email}
                                             </div>
                                             <div style={{ fontSize: "8pt" }}>
-                                                http://sjhrc.in
+                                                {hospital.website_link}
                                             </div>
                                             <div style={{ fontSize: "8pt" }}>
-                                                +91 8987999200
+                                                {hospital.contact_no}
                                             </div>
                                         </div>
 

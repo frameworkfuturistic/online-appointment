@@ -8,6 +8,7 @@ use App\Models\Masters\GenConsultant;
 use App\Models\Masters\GenConsultantShift;
 use App\Models\Masters\GenDepartment;
 use App\Models\Masters\GenState;
+use App\Models\Masters\MHospital;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class AppointmentController extends Controller
     /**
      * | Book Appointment Screen
      */
-    public function bookAppointmentView()
+    public function bookAppointmentView($hospitalId)
     {
         $mGenDepartments = new GenDepartment();
         $mGenConsultants = new GenConsultant();
@@ -34,6 +35,7 @@ class AppointmentController extends Controller
         $consultShifts = $mGenConsultantShift->listShifts();
         $states = $mGenStates->listStates();
         $cities = $mGenCities->listCities();
+        $hospital = MHospital::findOrFail($hospitalId);
 
         return Inertia::render('BookAppointment', [
             'departments' => $departments,
@@ -41,6 +43,7 @@ class AppointmentController extends Controller
             'shifts' => $consultShifts,
             'states' => $states,
             'cities' => $cities,
+            'hospital' => $hospital
         ]);
     }
 
