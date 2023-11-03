@@ -12,8 +12,10 @@ class GenDepartment extends Model
     /**
      * | General Department LIsts
      */
-    public function listDepartments()
+    public function listDepartments($hospitalId)
     {
-        return self::orderBy('Department')->get();
+        return self::where('HospitalID', $hospitalId)
+            ->orderBy('Department')
+            ->get();
     }
 }

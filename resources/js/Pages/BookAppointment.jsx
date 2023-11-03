@@ -32,7 +32,8 @@ export default function BookAppointment({
     const [department, setDepartment] = useState("");
     const [doctor, setDoctor] = useState("");
     const [shift, setShift] = useState("");
-    const [hasEverApplied, setHasEverApplied] = useState(false);
+    const [hasEverApplied, setHasEverApplied] = useState(0);
+    const hospitalId = hospital.id;
 
     // This function will send our form data to
     // store function of PostContoller
@@ -53,6 +54,7 @@ export default function BookAppointment({
             doctor,
             shift,
             hasEverApplied,
+            hospitalId,
         };
         e.preventDefault();
 
@@ -76,12 +78,19 @@ export default function BookAppointment({
     // Hits on Selecting Department
     function appendConsultant(e) {
         setFee("");
+
+        const hospDepartId =
+            e.target.options[e.target.selectedIndex].getAttribute(
+                "data-departmentId"
+            );
+
         setDepartment(e.target.value);
+
         if (e.target.value == "") {
             setConsultantOptions(consultants);
         } else {
             consultantOptions = consultants.filter((consultant) => {
-                return consultant.DepartmentID == Number(e.target.value);
+                return consultant.DepartmentID == Number(hospDepartId);
             });
             setConsultantOptions(consultantOptions);
         }
@@ -94,8 +103,13 @@ export default function BookAppointment({
         setFee("");
         setDoctor(e.target.value);
 
+        const hospDoctorId =
+            e.target.options[e.target.selectedIndex].getAttribute(
+                "data-consultantid"
+            );
+
         shiftOptions = shifts.filter((shift) => {
-            return shift.ConsultantID == Number(e.target.value);
+            return shift.ConsultantID == Number(hospDoctorId);
         });
         setShiftOptions(shiftOptions);
     }
@@ -106,7 +120,7 @@ export default function BookAppointment({
     function setFeeValue(e) {
         setShift(e.target.value);
         const shiftFee = shifts.find(
-            (shift) => shift.ConsultantShiftID == Number(e.target.value)
+            (shift) => shift.ID == Number(e.target.value)
         );
 
         setFee(shiftFee.Fee);
@@ -716,7 +730,7 @@ export default function BookAppointment({
                                             className="form-radio"
                                             id="input_10_0"
                                             name="q10_haveYou"
-                                            value={true}
+                                            value={1}
                                             onChange={handleHasEverApplied}
                                         />
                                         <label
@@ -734,7 +748,7 @@ export default function BookAppointment({
                                             id="hasAppliedBefore"
                                             name="q10_haveYou"
                                             defaultValue="No"
-                                            value={false}
+                                            value={0}
                                             onChange={handleHasEverApplied}
                                             checked
                                         />
@@ -782,7 +796,12 @@ export default function BookAppointment({
                                     <option value="">Please Select</option>
                                     {departments &&
                                         departments.map((item) => (
-                                            <option value={item.DepartmentID}>
+                                            <option
+                                                value={item.ID}
+                                                data-departmentId={
+                                                    item.DepartmentID
+                                                }
+                                            >
                                                 {item.Department}
                                             </option>
                                         ))}
@@ -822,8 +841,12 @@ export default function BookAppointment({
                                 >
                                     <option value>Please Select</option>
                                     {consultantOptions?.map((item) => (
-                                        <option value={item.ConsultantID}>
-                                            {item.Honour}&nbsp;
+                                        <option
+                                            value={item.ID}
+                                            data-consultantid={
+                                                item.ConsultantID
+                                            }
+                                        >
                                             {item.ConsultantName} (
                                             {item.ConsultantType})
                                         </option>
@@ -869,7 +892,10 @@ export default function BookAppointment({
                                     {shiftOptions &&
                                         shiftOptions.map((item) => (
                                             <option
-                                                value={item.ConsultantShiftID}
+                                                value={item.ID}
+                                                data-consultantshiftid={
+                                                    item.ConsultantShiftID
+                                                }
                                             >
                                                 {item.Shift}
                                             </option>

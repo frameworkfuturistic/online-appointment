@@ -12,9 +12,10 @@ class GenConsultant extends Model
     /**
      * | Consultant List
      */
-    public function listConsultants()
+    public function listConsultants($hospitalId)
     {
-        return self::select('Honour', 'ConsultantID', 'ConsultantName', 'ConsultantType', 'DepartmentID')
+        return self::select('ID', 'Honour', 'ConsultantID', 'ConsultantName', 'ConsultantType', 'DepartmentID')
+            ->where('HospitalID', $hospitalId)
             ->where('Hidden', 0)
             ->get();
     }

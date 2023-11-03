@@ -13,11 +13,13 @@ class GenConsultantShift extends Model
     /**
      * | Get consultant Shifts
      */
-    public function listShifts()
+    public function listShifts($hospitalId)
     {
         $consultantShifts = DB::table('gen_consultantshifts as cs')
             ->join('gen_shifts as s', 's.ShiftID', '=', 'cs.ShiftID')
             ->select('cs.*', DB::raw('CONCAT(s.ShiftName, " (", s.StartTime, " ", s.StartTimeAMPM, "-", s.EndTime, " ", s.EndTimeAMPM, ")") AS Shift'))
+            ->where('cs.HospitalID', $hospitalId)
+            ->where('s.HospitalID', $hospitalId)
             ->orderBy('cs.ConsultantID')
             ->get();
         return $consultantShifts;

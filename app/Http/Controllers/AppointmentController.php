@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia; // Import Inertia class to render components
+use Illuminate\Support\Facades\Crypt;
 
 class AppointmentController extends Controller
 {
@@ -24,18 +25,19 @@ class AppointmentController extends Controller
      */
     public function bookAppointmentView($hospitalId)
     {
+        $hospitalId = Crypt::decrypt($hospitalId);
         $mGenDepartments = new GenDepartment();
         $mGenConsultants = new GenConsultant();
         $mGenConsultantShift = new GenConsultantShift();
         $mGenStates = new GenState();
         $mGenCities = new GenCity();
 
-        $departments = $mGenDepartments->listDepartments();
-        $consultants = $mGenConsultants->listConsultants();
-        $consultShifts = $mGenConsultantShift->listShifts();
+        $hospital = MHospital::findOrFail($hospitalId);
+        $departments = $mGenDepartments->listDepartments($hospitalId);
+        $consultants = $mGenConsultants->listConsultants($hospitalId);
+        $consultShifts = $mGenConsultantShift->listShifts($hospitalId);
         $states = $mGenStates->listStates();
         $cities = $mGenCities->listCities();
-        $hospital = MHospital::findOrFail($hospitalId);
 
         return Inertia::render('BookAppointment', [
             'departments' => $departments,
@@ -69,7 +71,8 @@ class AppointmentController extends Controller
             'department' => 'required|string',
             'doctor' => 'required|integer',
             'shift' => 'required|integer',
-            'hasEverApplied' => 'nullable|In:true,false'
+            'hasEverApplied' => 'nullable|In:0,1',
+            'hospitalId' => 'required|integer'
         ]);
         if ($validator->fails())
             return response()->json(['status' => false, 'message' => $validator->errors(), 'data' => []]);
@@ -91,8 +94,10 @@ class AppointmentController extends Controller
                 'DepartmentID' => $req->department,
                 'ConsultantID' => $req->doctor,
                 'ShiftID' => $req->shift,
-                'HasEverApplied' => (bool)$req->hasEverApplied
+                'HasEverApplied' => (bool)$req->hasEverApplied,
+                'HospitalID' => $req->hospitalId
             ];
+
             $mGenAppointment->create($dbReqs);
             return response()->json(['status' => true, 'message' => 'Successfully Booked The appointment', 'data' => []]);
         } catch (Exception $e) {
