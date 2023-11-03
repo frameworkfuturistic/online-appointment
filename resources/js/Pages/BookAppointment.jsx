@@ -442,7 +442,7 @@ export default function BookAppointment({
                                         style={{ width: 310 }}
                                         data-masked="true"
                                         defaultValue
-                                        placeholder="AAAAABBBBB"
+                                        placeholder="Ex-0123456789"
                                         data-component="phone"
                                         aria-labelledby="label_23"
                                         onChange={(e) =>
