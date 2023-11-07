@@ -553,7 +553,7 @@ export default function BookAppointment({
                                                     style={{ minHeight: 13 }}
                                                     aria-hidden="false"
                                                 >
-                                                    State / Province
+                                                    State
                                                 </label>
                                             </span>
                                         </span>
@@ -634,7 +634,7 @@ export default function BookAppointment({
                                                     style={{ minHeight: 13 }}
                                                     aria-hidden="false"
                                                 >
-                                                    Postal / Zip Code
+                                                    Postal Code
                                                 </label>
                                             </span>
                                         </span>
