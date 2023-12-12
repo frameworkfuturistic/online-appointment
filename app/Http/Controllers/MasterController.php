@@ -118,7 +118,7 @@ class MasterController extends Controller
         $this->readAllParams($req->hospitalId);
         $this->_params = collect($this->_params)->where('consultant_id', $req->consultantId);
         $shifts = collect($this->_params)->map(function ($item) {
-            return collect($item)->only(['shift_id', 'shift_name', 'shift_start_time', 'shift_end_time', 'fee']);
+            return collect($item)->only(['consultant_shift_id', 'shift_id', 'shift_name', 'shift_start_time', 'shift_end_time', 'fee']);
         });
         $shifts = $shifts->sortBy('shift_start_time')->values();
         return responseMsgs(true, "Shift List", $shifts, "0102", "1.0", "POST", $req->deviceId);
