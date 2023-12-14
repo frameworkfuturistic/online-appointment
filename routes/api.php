@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\MasterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,5 +30,12 @@ Route::group(['middleware' => ['api.key']], function () {
         Route::post('master/v1/get-doctors-by-hospdept', 'getConsultantsByHospDeptId');  // 02
         Route::post('master/v1/get-shifts-by-hospconsultant', 'getShiftsByHospDoctorId');  // 03
         Route::post('master/v1/get-city-by-stateid', 'readCitiesByStates'); // 04
+    });
+
+    /**
+     * | Controller - 02
+     */
+    Route::controller(AppointmentController::class)->group(function () {
+        Route::post('aptms/v1/book-appointments', 'bookAppointmentV2');  // 02
     });
 });

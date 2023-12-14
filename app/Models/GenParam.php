@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -31,5 +32,20 @@ class GenParam extends Model
             )
             ->where('status', 1)
             ->get();
+    }
+
+    /**
+     * | Get Param ID by HospConsShiftId
+     */
+    public function getIdFromHospConsShiftId($consultantShiftId, $hospitalId)
+    {
+        $params = $this->select('id')
+            ->where('consultant_shift_id', $consultantShiftId)
+            ->where('hospitalId', $hospitalId)
+            ->where('status', 1)
+            ->first();
+        if (collect($params)->isEmpty())
+            throw new Exception("Parameter Not Available");
+        return $params;
     }
 }
