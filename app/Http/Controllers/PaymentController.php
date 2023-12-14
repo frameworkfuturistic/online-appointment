@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Razorpay\Api\Api;
 
 /* Introduction: This file is designed for a system where authors can receive payment for their works. The author anshu kumar can set their preferred payment method. 
@@ -42,11 +42,15 @@ class PaymentController extends Controller
         // Decode the JSON request body (optional, depending on your use case)
         $decodedBody = json_decode($requestBody, true);
 
+        // Create the directory if it doesn't exist
+        if (!File::isDirectory('json_files'))
+            File::makeDirectory('json_files', 0755, true, true);
+
         // Specify the file path where you want to save the JSON file
         $fileName = time() . 'json';
-        $filePath = storage_path('app/json_files/' . $fileName);
+        $filePath = public_path('json_files/' . $fileName);
 
         // Save the JSON data to the file
-        Storage::put($filePath, $decodedBody);
+        file_put_contents($filePath, $requestBody);
     }
 }
