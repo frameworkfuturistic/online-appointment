@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\MasterController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,5 +38,13 @@ Route::group(['middleware' => ['api.key']], function () {
      */
     Route::controller(AppointmentController::class)->group(function () {
         Route::post('aptms/v1/book-appointments', 'bookAppointmentV2');  // 02
+    });
+
+    /**
+     * | Controller - 03
+     */
+    Route::controller(PaymentController::class)->group(function () {
+        Route::post('payment/v1/order', 'makeOrder');       // 01
+        Route::post('payment/v1/callback', 'callback');
     });
 });
