@@ -17,4 +17,14 @@ class GenCity extends Model
         return self::orderBy('CityName')
             ->get();
     }
+
+    /**
+     * | List City by Stateid
+     */
+    public function listCityByState($stateId)
+    {
+        return self::orderBy('CityName')
+            ->where('StateID', $stateId)
+            ->get();
+    }
 }
