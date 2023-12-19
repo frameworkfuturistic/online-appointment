@@ -15,6 +15,8 @@ class ApiKeyMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        return $next($request);
+
         $apiKey = getenv('API_KEY');
         // Returns boolean
         if ($request->headers->has('API-KEY') == false) {
