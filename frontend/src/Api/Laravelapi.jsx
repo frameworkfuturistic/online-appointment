@@ -1,5 +1,5 @@
-export const ApiList = () => {
-    const url = import.meta.ApiList.API_BASE_URL
+export const Constant = () => {
+    const url = import.meta.ApiList?.API_BASE_URL;
     const api = {
      // get dept by hospital ID 
      apiDeptSta  : url + "/api/master/v1/get-dept-by-hospid" ,

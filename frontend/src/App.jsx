@@ -6,45 +6,100 @@ import './App.css'
 import axios from 'axios';
 import {API_BASE_URL} from "./Api/ApiList"
 import ApiMultipartHeader from "./Api/ApiMultipartHeader"
+import {Constant} from "./Api/Laravelapi"
+ 
+
 const YourFormComponent =  ()  => {
    const [step, setStep] = useState(1);
-   const [departments , setDepartments] = useState ([]) ; 
-   const [selectState , setSelectState] = useState ([]) ;
-   const departmentSchema = yup.object().shape({ 
-    department_id: yup.number().required(),
-    department_name: yup.string().required(),
-  });
+   const [hospitalId, setHospitalId] = useState(1);
+   const [departments , setDepartments] = useState([]) 
+   const [states, setStates] = useState([]);
+   const [selectedDepartment, setSelectedDepartment] = useState({});
+   const [selectedState, setSelectedState] = useState({});
+   const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState('');
 
-  const stateSchema = yup.object().shape({
-    stateID: yup.number().required(),
-    stateName: yup.string().required(),
-  });
-
-  useEffect(() => {
-    // Fetch departments data
-    axios.get('apiDeptSta')
-      .then((response) => {
-        setDepartments(response.data.departments);
-      })
-      .catch((error) => {
-        console.error('Error fetching departments:', error);
-      });
-
-    // Fetch states data
-    axios.get('apiStateId')
-      .then((response) => {
-        setSelectState(response.data.states);
-      })
-      .catch((error) => {
-        console.error('Error fetching states:', error);
-      });
-  }, []);
-  
   const [formData, setFormData] = useState({
-    input1: '',
-    input2: '',
+    appliedfor : '',
+     mrno: '',
+     name :'' ,
+     age: '',
+     dob: '',
+     gender: '',
+     address: '',
+     
+     selectcity: '',
+     pincode: '',
+     email: '',
+     department: '',
+     shift: '',
+     fee: '',
+     preffereddate: '',
+
     // Add more inputs here as needed
   });
+
+  const handleDepartmentChange = (e) => {
+    setSelectedDepartment(e.target.value);
+  };
+
+  const handleStateChange = (e) => {
+    setSelectedState(e.target.value);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [hospitalId]);
+
+  const fetchData = async () => { 
+    try {
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-dept-by-hospid', {
+        hospitalId: hospitalId,
+      });
+
+      const { departments, states } = response.data.data;
+      setDepartments(departments);
+      setStates(states);
+      console.log("Response", response?.data?.data)
+
+      console.log('departments:', departments);
+      console.log('States:', states);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  
+  const fetchCitiesByStateId = async (stateId) => {
+    try {
+      if (!stateId || isNaN(stateId)) {
+        console.error('Invalid State ID');
+        return;
+      }
+      const stateIdAsInt = parseInt(stateId, 10);
+      // Perform the API call with the stateId converted to an integer
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-city-by-stateid', {
+        stateId: stateIdAsInt,
+      });
+  
+      const citiesData = response.data.data;
+      setCities(citiesData);
+  
+      console.log('Cities:', citiesData);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
+  useEffect(() => {
+    if (selectedState !== '') {
+      fetchCitiesByStateId(selectedState);
+    }
+  }, [selectedState]);
+
+  const handleCityChange = (e) => {
+    setSelectedCity(e.target.value);
+  };
+
+
   const steps = ['Personal Information', 'Doctor Details', 'Payment']; // Add step names here
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,16 +108,19 @@ const YourFormComponent =  ()  => {
       [name]: value,
     }));
   };
+
    const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
     setFormData({
-      input1: '',
-      input2: '',
+      appliedfor: '',
+      mrno: '',
+
       // Reset other inputs as needed
     });
     setStep(1);
   };
+
     const handleNext = () => {
     setStep((prevStep) => prevStep + 1);
   };
@@ -214,7 +272,7 @@ const YourFormComponent =  ()  => {
          <div className="flex flex-col sm:w-1/2 sm:ml-1">
          <label htmlFor="input2" className="text-sm mb-1">Applied Ever </label>
          <select
-           id="input2"
+           id="appliedfor"
            name="additionalDetail"
            value={formData.additionalDetail}
            onChange={handleChange}
@@ -230,8 +288,8 @@ const YourFormComponent =  ()  => {
           <label htmlFor="additionalInput" className="text-sm mb-1">MR NO.</label>
           <input
             type="text"
-            id="additionalInput"
-            name="additionalInput"
+            id="mrno"
+            name="mrno"
             value={formData.additionalInput}
             onChange={handleChange}
             placeholder="Additional Input"
@@ -243,7 +301,7 @@ const YourFormComponent =  ()  => {
     <label htmlFor="input1" className="text-sm mb-1">Name </label>
     <input
       type="text"
-      id="input1"
+      id="name"
       name="name"
       value={formData.name}
       onChange={handleChange}
@@ -256,7 +314,7 @@ const YourFormComponent =  ()  => {
     <label htmlFor="input2" className="text-sm mb-1">DOB</label>
     <input
       type="date"
-     
+     id ="dob"
       name="dob"
       value={formData.dob}
       onChange={handleChange}
@@ -270,7 +328,7 @@ const YourFormComponent =  ()  => {
          <label htmlFor="input2" className="text-sm mb-1">Gender</label>
          <input
            type="text"
-           id="input2"
+           id="gender"
            name="gender"
            value={formData.gender}
            onChange={handleChange}
@@ -282,7 +340,7 @@ const YourFormComponent =  ()  => {
     <label htmlFor="input1" className="text-sm mb-1">Address  </label>
     <input
       type="text"
-      id="input1"
+      id="address"
       name="address"
       value={formData.address}
       onChange={handleChange}
@@ -291,44 +349,47 @@ const YourFormComponent =  ()  => {
     />
   </div>
   <div className="flex flex-col sm:w-1/2 sm:ml-1">
-    <label htmlFor="input2" className="text-sm mb-1">Select State</label>
+    <label htmlFor="stateSelect" className="text-sm mb-1">Select State</label>
      <select
-      id="input2"
-      name="selectState"
-      value={formData.selectState}
-      onChange={handleChange}
-      className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
-    >
+      id="stateSelect"
+      name="selectstate"
+      value={selectedState}
+      onChange={handleStateChange}
+      className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
       <option value="">Select an option</option>
-      <option value="option1">Jharkhand</option>
-      <option value="option2">Bihar</option>
-      {/* Add other options */}
+      {states.map((state) => (
+        <option key={state.stateID} value={state.stateID}>
+          {state.StateName}
+        </option>
+      ))}
     </select>
   </div>
-         </div>
-
-         <div className='flex flex-col sm:flex-row'>
+     </div>
+       <div className='flex flex-col sm:flex-row'>
          <div className="flex flex-col sm:w-1/2 sm:ml-1">
-    <label htmlFor="input2" className="text-sm mb-1">Select City</label>
+    <label htmlFor="citySelect" className="text-sm mb-1">Select City</label>
      <select
-      id="input2"
-      name="selectCity"
-      value={formData.selectCity}
-      onChange={handleChange}
+      id="citySelect"
+      name="selectcity"
+      value={selectedCity}
+      onChange={handleCityChange}
       className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
     >
       <option value="">Select an option</option>
-      <option value="option1">Ranchi</option>
-      <option value="option2">Ormanjhi</option>
-      {/* Add other options */}
+      {cities.map((city) => (
+        <option key={city.cityID} value={city.cityId}>
+          {city.cityName}
+        </option>
+      ))}
+       
     </select>
   </div>
         <div className="flex flex-col sm:w-1/2 sm:mr-1">
     <label htmlFor="input1" className="text-sm mb-1">Pin Code   </label>
     <input
       type="text"
-      id="input1"
-      name="postalCode"
+      id="pincode"
+      name="pincode"
       value={formData.postalCode}
       onChange={handleChange}
       placeholder="Postal Code "
@@ -339,7 +400,7 @@ const YourFormComponent =  ()  => {
     <label htmlFor="input2" className="text-sm mb-1">E-mail</label>
       <input
       type="text"
-      id="input1"
+      id="email"
       name="email"
       value={formData.email}
       onChange={handleChange}
@@ -361,24 +422,25 @@ const YourFormComponent =  ()  => {
             <div className='flex flex-col sm:flex-row'>
          
       <div className="flex flex-col sm:w-1/2 sm:mr-1">
-    <label htmlFor="input1" className="text-sm mb-1">Department  </label>
+    <label htmlFor="departmentSelect" className="text-sm mb-1">Department  </label>
        <select
-      id="input2"
-      name="department"
-      value={formData.input2}
-      onChange={handleChange}
-      className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
-    >
-      <option value="">Select Department </option>
-      <option value="option1">OPD</option>
-      <option value="option2">IPD</option>
-      {/* Add other options */}
+      id="departmentSelect"
+      name ="departmentSelect"
+      value={selectedDepartment}
+      onChange={handleDepartmentChange}
+      className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full" >
+      <option value="">Select Department</option>
+    {departments && departments.length > 0 && departments.map((department) => (
+      <option key={department.department_id} value={department.department_id}>
+        {department.department_name}
+      </option>
+    ))}
     </select>
       </div>
       <div className="flex flex-col sm:w-1/2 sm:ml-1">
       <label htmlFor="input2" className="text-sm mb-1">Select Doctor </label>
       <select
-        id="input2"
+        id="doctor"
         name="doctor"
         value={formData.input2}
         onChange={handleChange}
@@ -389,14 +451,13 @@ const YourFormComponent =  ()  => {
         <option value="option2">Option 2</option>
         {/* Add other options */}
       </select>
-    </div>
-     
       </div>
+     </div>
           <div className='flex flex-col sm:flex-row'>
           <div className="flex flex-col sm:w-1/2 sm:ml-1">
           <label htmlFor="input2" className="text-sm mb-1">Select Shift  </label>
           <select
-            id="input2"
+            id="shift"
             name="shift"
             value={formData.input2}
             onChange={handleChange}
@@ -412,7 +473,7 @@ const YourFormComponent =  ()  => {
         <label htmlFor="input2" className="text-sm mb-1">Appointment Fee </label>
         <input
         type="text"
-        id="input1"
+        id="fee"
         name="fee"
         value={formData.fee}
         onChange={handleChange}
@@ -426,9 +487,9 @@ const YourFormComponent =  ()  => {
           <label htmlFor="input2" className="text-sm mb-1">Select Prefered Date  </label>
           <input
           type="date"
-          id="input1"
-          name="fee"
-          value={formData.fee}
+          id="preffereddate"
+          name="preffereddate"
+          value={formData.preffereddate}
           onChange={handleChange}
           placeholder="Appointment Fee "
           className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
@@ -442,7 +503,7 @@ const YourFormComponent =  ()  => {
         step ===3 && (
           <>
           <div>
-          <button onClick={initiatePayment}>Pay with Razorpay</button>
+          <button className='bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' onClick={initiatePayment}>Pay with Razorpay</button>
         </div>
           </>
           )
