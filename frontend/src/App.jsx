@@ -14,11 +14,14 @@ const YourFormComponent =  ()  => {
    const [hospitalId, setHospitalId] = useState(1);
    const [departments , setDepartments] = useState([]) 
    const [states, setStates] = useState([]);
-   const [selectedDepartment, setSelectedDepartment] = useState({});
+   const [selectedDepartment, setSelectedDepartment] = useState('');
    const [selectedState, setSelectedState] = useState({});
-   const [cities, setCities] = useState([]);
-  const [selectedCity, setSelectedCity] = useState('');
-
+   const [selectedStateId, setSelectedStateId] = useState(''); // State to hold the selected state ID
+   const [cities, setCities] = useState([]); // State to hold fetched cities
+   const [doctors, setDoctors] = useState([]);
+   const [departmentId, setDepartmentId] = useState(1);
+   const [shifts, setShifts] = useState([]);
+   const [consultantId, setConsultantId] = useState('');
   const [formData, setFormData] = useState({
     appliedfor : '',
      mrno: '',
@@ -27,7 +30,6 @@ const YourFormComponent =  ()  => {
      dob: '',
      gender: '',
      address: '',
-     
      selectcity: '',
      pincode: '',
      email: '',
@@ -39,10 +41,14 @@ const YourFormComponent =  ()  => {
     // Add more inputs here as needed
   });
 
-  const handleDepartmentChange = (e) => {
-    setSelectedDepartment(e.target.value);
+  const handleDepartmentSelect = (event) => {
+    const deptId = event.target.value;
+    setDepartmentId(deptId);
+    fetchDoctorsByHospitalAndDept();
   };
 
+
+  
   const handleStateChange = (e) => {
     setSelectedState(e.target.value);
   };
@@ -51,11 +57,13 @@ const YourFormComponent =  ()  => {
     fetchData();
   }, [hospitalId]);
 
+   {/*from Dept id to get state and deoartment*/}
   const fetchData = async () => { 
     try {
       const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-dept-by-hospid', {
         hospitalId: hospitalId,
       });
+      
 
       const { departments, states } = response.data.data;
       setDepartments(departments);
@@ -68,39 +76,115 @@ const YourFormComponent =  ()  => {
       console.error('Error fetching data:', error);
     }
   };
-  
-  const fetchCitiesByStateId = async (stateId) => {
+  {/*from stateId get cityId*/}
+  const fetchCitiesByStateId = async (selectedStateId) => {
     try {
-      if (!stateId || isNaN(stateId)) {
-        console.error('Invalid State ID');
-        return;
-      }
-      const stateIdAsInt = parseInt(stateId, 10);
-      // Perform the API call with the stateId converted to an integer
+      // Ensure selectedStateId is an integer
+      const stateIdInteger = parseInt(selectedStateId, 10); // Assuming base 10 for decimal numbers
+  
       const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-city-by-stateid', {
-        stateId: stateIdAsInt,
+        stateId: stateIdInteger,
       });
   
-      const citiesData = response.data.data;
-      setCities(citiesData);
+      const responseData = response.data;
   
-      console.log('Cities:', citiesData);
+      if (response.status === 422) {
+        console.error('Validation error:', responseData.message);
+        return;
+      }
+  
+      const fetchedCities = responseData.data;
+      setCities(fetchedCities);
     } catch (error) {
       console.error('Error fetching cities:', error);
     }
   };
+  {/*frrom hopsitId and DeptId geṭ Doctors list */}
+  const fetchDoctorsByHospitalAndDept = async () => {
+    const departmentIdString = String(departmentId).trim(); 
+    try {
+      if (!departmentIdString || departmentIdString === '') {
+        console.error('Department ID is missing or empty.');
+        return;
+      }
+  
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-doctors-by-hospdept', {
+        hospitalId: hospitalId,
+        departmentId: departmentIdString,
+      });
+  
+      const responseData = response.data;
+  
+      if (response.status === 422) {
+        console.error('Validation error:', responseData.message);
+        return;
+      }
+  
+      const fetchedDoctors = responseData.data;
+      setDoctors(fetchedDoctors);
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+    }
+  };
+ {/*from HospitalId And Department Id get Shiftname and shiftstatrttime */}
+  const fetchShiftsByHospitalAndConsultant = async () => {
+    try {
+      
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-shifts-by-hospconsultant', {
+        hospitalId: hospitalId,
+        consultantId: consultantId,
+      });
+
+      const responseData = response.data;
+
+      if (response.status === 422) {
+        console.error('Validation error:', responseData.message);
+        return;
+      }
+
+      const fetchedShifts = responseData.data;
+      setShifts(fetchedShifts);
+    } catch (error) {
+      console.error('Error fetching shifts:', error);
+    }
+  };
+ 
+  const handleShiftSelect = (event) => {
+    const shiftId = event.target.value;
+    const selectedShift = shifts.find(shift => shift.consultant_shift_id === shiftId);
+  
+    if (selectedShift) {
+      setFee(selectedShift.fee);  // Set the fee in the state
+    }
+  };
+
+  const handleDoctorSelect = (event) => {
+    const consultantId = event.target.value;
+    setConsultantId(consultantId);
+    fetchShiftsByHospitalAndConsultant();
+  };
+
+  // Function to handle city selection
+  const handleCitySelect = (event) => {
+    const selectedCityId = event.target.value;
+    // Do something with the selected city ID
+    console.log('Selected City ID:', selectedCityId);
+    // You can perform further actions based on the selected city
+  };
+
+ 
+// Example usage when a state is selected
+ 
+
+
   useEffect(() => {
     if (selectedState !== '') {
       fetchCitiesByStateId(selectedState);
     }
   }, [selectedState]);
 
-  const handleCityChange = (e) => {
-    setSelectedCity(e.target.value);
-  };
-
-
   const steps = ['Personal Information', 'Doctor Details', 'Payment']; // Add step names here
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -358,7 +442,7 @@ const YourFormComponent =  ()  => {
       className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
       <option value="">Select an option</option>
       {states.map((state) => (
-        <option key={state.stateID} value={state.stateID}>
+        <option key={state.StateID} value={state.StateID}>
           {state.StateName}
         </option>
       ))}
@@ -368,22 +452,15 @@ const YourFormComponent =  ()  => {
        <div className='flex flex-col sm:flex-row'>
          <div className="flex flex-col sm:w-1/2 sm:ml-1">
     <label htmlFor="citySelect" className="text-sm mb-1">Select City</label>
-     <select
-      id="citySelect"
-      name="selectcity"
-      value={selectedCity}
-      onChange={handleCityChange}
-      className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
-    >
-      <option value="">Select an option</option>
-      {cities.map((city) => (
-        <option key={city.cityID} value={city.cityId}>
-          {city.cityName}
-        </option>
-      ))}
-       
-    </select>
-  </div>
+    <select  className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
+    <option value="">Select City</option>
+    {cities.map(city => (
+      <option key={city.CityID} value={city.CityID}>
+        {city.CityName}
+      </option>
+    ))}
+  </select>
+         </div>
         <div className="flex flex-col sm:w-1/2 sm:mr-1">
     <label htmlFor="input1" className="text-sm mb-1">Pin Code   </label>
     <input
@@ -416,6 +493,7 @@ const YourFormComponent =  ()  => {
         )}
 
         {/* Add other steps similarly */}
+
         {step === 2 && (
           <>
             <h2 className='font-sans text-lg font-bold text-emerald-400/60 my-1'>Doctor Details</h2>
@@ -423,52 +501,40 @@ const YourFormComponent =  ()  => {
          
       <div className="flex flex-col sm:w-1/2 sm:mr-1">
     <label htmlFor="departmentSelect" className="text-sm mb-1">Department  </label>
-       <select
-      id="departmentSelect"
-      name ="departmentSelect"
-      value={selectedDepartment}
-      onChange={handleDepartmentChange}
-      className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full" >
-      <option value="">Select Department</option>
-    {departments && departments.length > 0 && departments.map((department) => (
-      <option key={department.department_id} value={department.department_id}>
-        {department.department_name}
+    <select  className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full" onChange={handleDepartmentSelect}>
+    <option value="">Select Department</option>
+    {departments.map(dept => (
+      <option key={dept.department_id} value={dept.department_id}>
+        {dept.department_name}
       </option>
     ))}
-    </select>
+  </select>
       </div>
       <div className="flex flex-col sm:w-1/2 sm:ml-1">
       <label htmlFor="input2" className="text-sm mb-1">Select Doctor </label>
-      <select
-        id="doctor"
-        name="doctor"
-        value={formData.input2}
-        onChange={handleChange}
-        className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
-      >
-        <option value="">Select Doctor </option>
-        <option value="option1">Option 1</option>
-        <option value="option2">Option 2</option>
-        {/* Add other options */}
+      <select className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }} >
+        <option value="">Select Doctor</option>
+        {doctors.map(doctor => (
+          <option key={doctor.consultant_id} value={doctor.consultant_id}>
+            {doctor.consultant_name}
+          </option>
+        ))}
       </select>
       </div>
      </div>
           <div className='flex flex-col sm:flex-row'>
           <div className="flex flex-col sm:w-1/2 sm:ml-1">
-          <label htmlFor="input2" className="text-sm mb-1">Select Shift  </label>
-          <select
-            id="shift"
-            name="shift"
-            value={formData.input2}
-            onChange={handleChange}
-            className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
-          >
-            <option value="">Select Shift </option>
-            <option value="option1">Option 1</option>
-            <option value="option2">Option 2</option>
-            {/* Add other options */}
+          <label htmlFor="input2" className="text-sm mb-1">Select Shift</label>
+          <select className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full" onChange={handleShiftSelect}>
+            <option value="">Select Shift</option>
+            {shifts.length > 0 && // Check if 'shifts' array has elements
+              shifts.map(shift => (
+                <option key={shift.consultant_shift_id} value={shift.consultant_shift_id}>
+                  {shift.shift_name} - {shift.shift_start_time} to {shift.shift_end_time}
+                </option>
+              ))}
           </select>
-          </div>
+        </div>
         <div className="flex flex-col sm:w-1/2 sm:ml-1">
         <label htmlFor="input2" className="text-sm mb-1">Appointment Fee </label>
         <input
@@ -499,6 +565,7 @@ const YourFormComponent =  ()  => {
           </div>
           </>
         )} 
+
        {
         step ===3 && (
           <>
