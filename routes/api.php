@@ -23,11 +23,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::controller(UserController::class)->group(function(){
-    Route::post('register', 'createUser');
-    Route::post('login', 'loginAuth');
-});
-
 
 Route::group(['middleware' => ['api.key']], function () {
     /**
@@ -53,5 +48,13 @@ Route::group(['middleware' => ['api.key']], function () {
     Route::controller(PaymentController::class)->group(function () {
         Route::post('payment/v1/order', 'makeOrder');       // 01
         Route::post('payment/v1/callback', 'callback');
+    });
+
+    /**
+     * | Controller - 04
+     */
+    Route::controller(UserController::class)->group(function(){
+        Route::post('register', 'createUser'); // 01
+        Route::post('login', 'loginAuth'); // 02
     });
 });
