@@ -56,5 +56,6 @@ Route::group(['middleware' => ['api.key']], function () {
     Route::controller(UserController::class)->group(function(){
         Route::post('register', 'createUser'); // 01
         Route::post('login', 'loginAuth'); // 02
+        Route::post('logout', 'logout')->middleware('auth:sanctum'); //03
     });
 });

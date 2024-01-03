@@ -99,4 +99,16 @@ class UserController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "0402", "1.0", "POST", "");
         }
     }
+
+    /**
+     * | User Logout
+     */
+    public function logout(Request $req){
+        try{
+            $req->user()->currentAccessToken()->delete();
+            return responseMsgs(true, "You have Logged out.", [], "0403" , "1.0", "POST", "");
+        }catch(Exception $e){
+            return responseMsgs(false, $e->getMessage(), "", "0403", "1.0", "POST", "");
+        }
+    }
 }
