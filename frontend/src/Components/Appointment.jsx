@@ -28,12 +28,12 @@ const YourFormComponent =  ()  => {
     appliedfor : '',
      mrno: '',
      name :'' ,
-     age: '',
      dob: '',
      gender: '',
      address: '',
-     selectcity: '',
+     selectstate: '',
      pincode: '',
+     doctor:'' ,
      email: '',
      department: '',
      shift: '',
@@ -59,7 +59,7 @@ const YourFormComponent =  ()  => {
     fetchData();
   }, [hospitalId]);
 
-   {/*from Dept id to get state and deoartment*/}
+  {/*from Dept id to get state and deoartment*/}
   const fetchData = async () => { 
     try {
       const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-dept-by-hospid', {
@@ -101,7 +101,7 @@ const YourFormComponent =  ()  => {
       console.error('Error fetching cities:', error);
     }
   };
-  {/*frrom hopsitId and DeptId geṭ Doctors list */}
+  {/*from hopsitId and DeptId geṭ Doctors list */}
   const fetchDoctorsByDepartment = async (departmentId) => {
     try {
       const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-doctors-by-hospdept', {
@@ -123,30 +123,28 @@ const YourFormComponent =  ()  => {
       setDoctors([]);
     }
   };
- {/*from HospitalId And Department Id get Shiftname and shiftstatrttime */}
- const fetchShiftsByDoctor = async (consultantId) => {
-  try {
-    const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-shifts-by-hospconsultant', {
-      hospitalId: '1', // Replace with your hospital ID
-      consultantId: consultantId,
-    });
-
-    const responseData = response.data;
-
-    if (response.status === 422) {
-      console.error('Validation error:', responseData.message);
-      return [];
+  {/*from HospitalId And Department Id get Shiftname and shiftstatrttime */}
+  const fetchShiftsByDoctor = async (consultantId) => {
+    try {
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-shifts-by-hospconsultant', {
+        hospitalId: '1', // Replace with your hospital ID
+        consultantId: consultantId,
+      });
+  
+      if (response && response.data && response.status === 200) {
+        const responseData = response.data;
+        const fetchedShifts = responseData.data;
+        setShifts(fetchedShifts);
+      } else {
+        console.error('Invalid response or status:', response);
+        setShifts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching shifts:', error);
+      setShifts([]);
     }
-
-    const fetchedShifts = responseData.data;
-    setShifts(fetchedShifts);
-  } catch (error) {
-    console.error('Error fetching shifts:', error);
-    setShifts([]);
-  }
-};
- 
-  // Function to handle department selection
+  };
+   // Function to handle department selection
   const handleDepartmentChange = async (selectedDept) => {
     setSelectedDepartment(selectedDept);
     await fetchDoctorsByDepartment(selectedDept);
@@ -158,20 +156,20 @@ const YourFormComponent =  ()  => {
    const handleDoctorChange = async (selectedDoctorId) => {
     setSelectedDoctor(selectedDoctorId);
     await fetchShiftsByDoctor(selectedDoctorId);
-  };
+   };
 
-  const handleShiftChange = (selectedShiftId) => {
-    const selectedShiftData = shifts.find((shift) => shift.shift_id === selectedShiftId);
+   const handleShiftChange = (selectedShiftId) => {
+    const selectedShiftData = shifts.find((shift) => shift.consultant_shift_id == selectedShiftId);
   
     if (selectedShiftData && selectedShiftData.fee !== undefined) {
       setSelectedShiftId(selectedShiftId);
-      setSelectedShiftFee(selectedShiftData.fee);
+      setSelectedShiftFee(selectedShiftData.fee.toString());
     } else {
       setSelectedShiftId('');
       setSelectedShiftFee('');
     }
   };
-
+  
 
   // Function to handle city selection
   const handleCitySelect = (event) => {
@@ -183,10 +181,7 @@ const YourFormComponent =  ()  => {
 
  
 // Example usage when a state is selected
- 
-
-
-  useEffect(() => {
+ useEffect(() => {
     if (selectedState !== '') {
       fetchCitiesByStateId(selectedState);
     }
@@ -273,9 +268,10 @@ const YourFormComponent =  ()  => {
       loadRazorpayScript();
     }, []); // Run this effect only once when the component mounts
  
+    //payment Gateway 
     const initiatePayment = async () => {
       try {
-        const response = await axios.post(`${API_BASE_URL}/api/payment/v1/order`); // Replace with your endpoint
+        const response = await axios.post(`http://192.168.29.66:8001/api/payment/v1/order`); // Replace with your endpoint
         console.log(response)
         const order = response.data; // Assuming the backend returns necessary order data
         setOrderData(order);
@@ -330,12 +326,12 @@ const YourFormComponent =  ()  => {
     <div className=" flex flex-auto justify-center md:mx-20 mx-4 my-4    ">
     <div className=" max-w-screen-lg overflow-hidden rounded-t-xl bg-emerald-400/60 py-20 text-center shadow-xl shadow-gray-300">
     <h3 className="mt-2 px-8 text-3xl font-bold text-white md:text-5xl"> Shree jagannath Hospital And Research Center </h3>
-    <p className="mt-6 text-lg text-white">in collaboration with Symptoms Care </p>
+    <p className="mt-6 text-2xl font-serif font-bold text-white  ">in collaboration with Symptoms Care </p>
     <img className="absolute top-0 left-0 -z-10 h-full w-full object-cover opacity-100  " src={appoinent} alt="" />
     </div>
     </div>
-         <div className="max-w-screen-xl  rounded-lg mx-auto px-4 sm:px-6  lg:px-8 bg-slate-50   p-2 sm:my-2 sm:p-4 lg:my-4 lg:p-6 ">
-    <div className="flex flex-col sm:flex-row items-center justify-between mb-6 ">
+    <div className="max-w-screen-xl md:flex-row  rounded-xl mx-auto px-4 sm:px-6  lg:px-8 bg-slate-50   p-2 sm:my-2 sm:p-4 lg:my-4 lg:p-6 ">
+    <div className="flex flex-col sm:flex-row  items-center justify-between mb-6 ">
     {steps.map((stepName, index) => (
     <div
     key={index}
@@ -449,7 +445,7 @@ const YourFormComponent =  ()  => {
       value={selectedState}
       onChange={handleStateChange}
       className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
-      <option value="">Select an option</option>
+      <option value={formData.selectstate}>Select an option</option>
       {states.map((state) => (
         <option key={state.StateID} value={state.StateID}>
           {state.StateName}
@@ -461,8 +457,8 @@ const YourFormComponent =  ()  => {
          <div className='flex flex-col sm:flex-row'>
          <div className="flex flex-col sm:w-1/2 sm:ml-1 mr-2 ">
     <label htmlFor="citySelect" className="text-sm mb-1">Select City</label>
-    <select  className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
-    <option value="">Select City</option>
+    <select  name="selectcity" className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
+    <option value={formData.selectcity}>Select City</option>
     {cities.map(city => (
       <option key={city.CityID} value={city.CityID}>
         {city.CityName}
@@ -510,8 +506,8 @@ const YourFormComponent =  ()  => {
          
       <div className="flex flex-col sm:w-1/2 sm:mr-1">
     <label htmlFor="departmentSelect" className="text-sm mb-1">Department  </label>
-    <select className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  onChange={(e) => handleDepartmentChange(e.target.value)}>
-        <option value="">Select Department</option>
+    <select name="department" className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  onChange={(e) => handleDepartmentChange(e.target.value)}>
+        <option value={formData.department}>Select Department</option>
         {departments.map((dept) => (
           <option key={dept.department_id} value={dept.department_id}>
             {dept.department_name}
@@ -521,8 +517,8 @@ const YourFormComponent =  ()  => {
       </div>
       <div className="flex flex-col sm:w-1/2 sm:ml-1">
       <label htmlFor="input2" className="text-sm mb-1">Select Doctor </label>
-      <select  className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full" onChange={(e) => handleDoctorChange(e.target.value)} value={selectedDoctor}>
-      <option value="">Select Doctor</option>
+      <select name="doctor"  className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full" onChange={(e) => handleDoctorChange(e.target.value)} value={selectedDoctor}>
+      <option value={formData.doctor}>Select Doctor</option>
       {doctors.map((doctor) => (
         <option key={doctor.consultant_id} value={doctor.consultant_id}>
           {doctor.consultant_name}
@@ -530,34 +526,39 @@ const YourFormComponent =  ()  => {
       ))}
     </select>
       </div>
-     </div>
-          <div className='flex flex-col sm:flex-row'>
-          <div className="flex flex-col sm:w-1/2 sm:ml-1">
-          <label htmlFor="input2" className="text-sm mb-1">Select Shift</label>
-          <select  className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full" onChange={(e) => handleShiftChange(e.target.value)}>
-          <option value="">Select Shift</option>
+      </div>
+      <div className='flex flex-col sm:flex-row'>
+      <div className="flex flex-col sm:w-1/2 sm:ml-1">
+        <label htmlFor="input2" className="text-sm mb-1">Select Shift</label>
+        <select
+        name="shift"
+          className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
+          onChange={(e) => handleShiftChange(e.target.value)}
+        >
+          <option value={formData.shift}>Select Shift</option>
           {shifts.map((shift) => (
             <option key={shift.consultant_shift_id} value={shift.shift_id}>
-              {shift.shift_name} - {shift.shift_start_time} to {shift.shift_end_time} 
+              {shift.shift_name} - {shift.shift_start_time} to {shift.shift_end_time}
             </option>
           ))}
         </select>
-        </div>
-        <div className="flex flex-col sm:w-1/2 sm:ml-1">
-        <label htmlFor="input2" className="text-sm mb-1">Appointment Fee</label>
+      </div>
+      <div className="flex flex-col sm:w-1/2 sm:ml-1">
+        <label htmlFor="selectedShiftFee" className="text-sm mb-1">Appointment Fee</label>
         <input
-          id="input2"
+        name="fee"
+          id="selectedShiftFee"
           className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
           type="text"
           value={selectedShiftFee}
-         
+          readOnly
         />
-        </div>
-          </div>
-          <div className='flex flex-col sm:flex-row'>
+      </div>
+      </div>
+       <div className='flex flex-col sm:flex-row'>
           <div className="flex flex-col sm:w-1/2 sm:ml-1">
           <label htmlFor="input2" className="text-sm mb-1">Select Prefered Date  </label>
-        <input className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"></input>
+        <input type='date' className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"></input>
            </div>
        
           </div>
@@ -567,7 +568,7 @@ const YourFormComponent =  ()  => {
        {
         step ===3 && (
           <>
-          <div>
+          <div className='flex flex-auto justify-center md:mx-20 mx-4 my-4 '>
           <button className=' bg-red-500 flex   hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' onClick={initiatePayment}>Pay with Razorpay</button>
         </div>
           </>
@@ -591,7 +592,7 @@ const YourFormComponent =  ()  => {
           )}
         </div>
       </form>
-         </div>
+    </div>
      
     </div>
     
