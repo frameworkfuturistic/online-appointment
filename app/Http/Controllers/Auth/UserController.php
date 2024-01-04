@@ -9,6 +9,12 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
+
+/**
+ * | Author-Sanjiv Kumar
+ * | Created On-02-01-2024 
+ * | Created for- User Authentication (Register & Login)
+ */
 class UserController extends Controller
 {
 
@@ -27,7 +33,7 @@ class UserController extends Controller
         $validated = Validator::make(
             $request->all(),
             [
-                'full_name' => 'required|string|max:255',
+                'fullName' => 'required|string|max:255',
                 'email' => 'required|email|unique:users',
                 'mobile_no' => 'required|integer|unique:users',
                 'password' => 'required|string|min:8',
@@ -43,27 +49,20 @@ class UserController extends Controller
         }
 
         try {
-            $checkEmail = User::where('email', $request->email)->first();
+            $checkEmail = $this->_mUser->getUserByEmail($request->email);
             if ($checkEmail)
                 throw new Exception('The email has already taken.');
 
             $user = User::create([
-                'full_name' => $request->full_name,
+                'full_name' => $request->fullName,
                 'email' => $request->email,
                 'mobile_no' => $request->mobile_no,
                 'password' => Hash::make($request->password),
             ]);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'User Registered Successfully !! Please Continue to Login.',
-                'data' => $user
-            ]);
+            return responseMsgs(true, "User Registered Successfully !! Please Continue to Login.", $user, "0401", "1.0", "POST", "");
         } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'errors' => $e->getMessage()
-            ]);
+            return responseMsgs(false, $e->getMessage(), "", "0401", "1.0", "POST", "");
         }
     }
 
@@ -91,20 +90,25 @@ class UserController extends Controller
                 $token = $user->createToken('my-app-token')->plainTextToken;
                 $data['token'] = $token;
                 $data['userDetails'] = $user;
-                
-                return response()->json([
-                    'status' => true,
-                    'message' => 'You have Logged In Successfully',
-                    'data' => $data
-                ]);
+
+            return responseMsgs(true, "You have Logged In Successfully", $data, "0402", "1.0", "POST", "");
             }
 
             throw new Exception("Password Not Matched");
         } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'errors' => $e->getMessage()
-            ]);
+            return responseMsgs(false, $e->getMessage(), "", "0402", "1.0", "POST", "");
+        }
+    }
+
+    /**
+     * | User Logout
+     */
+    public function logout(Request $req){
+        try{
+            $req->user()->currentAccessToken()->delete();
+            return responseMsgs(true, "You have Logged out.", [], "0403" , "1.0", "POST", "");
+        }catch(Exception $e){
+            return responseMsgs(false, $e->getMessage(), "", "0403", "1.0", "POST", "");
         }
     }
 }
