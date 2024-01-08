@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\GenParam;
 use App\Models\Masters\GenCity;
 use App\Models\Masters\GenState;
+use App\Models\Masters\MHospital;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
@@ -146,5 +149,37 @@ class MasterController extends Controller
         }
 
         return responseMsgs(true, "City List", $cities, "0102", "1.0", "POST", $req->deviceId);
+    }
+
+
+    /**
+     * | Get Patients by Search Parameters
+     */
+    public function readPatientsBySearchParams(Request $req)
+    {
+        // Validation
+        $validator = Validator::make($req->all(), [
+            'hospitalId' => 'required|integer|min:1'
+        ]);
+
+        if ($validator->fails())
+            return validationError($validator);
+
+        $mHospital = new MHospital();
+        try {
+            $baseUrl = $mHospital->getApiUrlByHospId($req->hospitalId);
+            if (collect($baseUrl)->isEmpty())
+                throw new Exception("Hospital ID not Available");
+            $baseUrl = $baseUrl->api_base_url;
+            $response = Http::post("$baseUrl/api/mr/v1/search", $req->all());
+
+            if ($response->failed())
+                throw new Exception($response->clientError());
+
+            $body =  json_decode($response->body(), true);
+            return responseMsgs(true, "Patient Record", $body['data'], "0105", "1.0", "POST", $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "0105", "1.0", "POST", $req->deviceId);
+        }
     }
 }
