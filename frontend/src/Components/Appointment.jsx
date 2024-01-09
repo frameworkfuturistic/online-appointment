@@ -2,9 +2,9 @@ import React, { useState ,useEffect } from 'react';
 import appoinent from "../assets/image/appoinment.jpg" 
 import { useFormik } from 'formik';
 import * as yup from 'yup';
- 
+import jagganath  from '../assets/image/jagganath.png' 
 import axios from 'axios';
- 
+import ApiJsonHeader from "../Api/ApiMultipartHeader/" 
  
 
 const YourFormComponent =  ()  => {
@@ -24,6 +24,7 @@ const YourFormComponent =  ()  => {
    const [selectedDoctor, setSelectedDoctor] = useState('');
    const [selectedShiftId, setSelectedShiftId] = useState('');
    const [selectedShiftFee, setSelectedShiftFee] = useState('');
+   const [payloading, setPayloading] = useState(true);
   const [formData, setFormData] = useState({
     appliedfor : '',
      mrno: '',
@@ -31,7 +32,8 @@ const YourFormComponent =  ()  => {
      dob: '',
      gender: '',
      address: '',
-     selectstate: '',
+     selectState: '',
+     selectCity : "" ,
      pincode: '',
      doctor:'' ,
      email: '',
@@ -49,10 +51,13 @@ const YourFormComponent =  ()  => {
     fetchDoctorsByHospitalAndDept();
   };
 
-
+console.log('Form Data => ', formData)
   
   const handleStateChange = (e) => {
     setSelectedState(e.target.value);
+    if (e.target.value !== '') {
+      fetchCitiesByStateId(e.target.value);
+    }
   };
 
   useEffect(() => {
@@ -62,7 +67,7 @@ const YourFormComponent =  ()  => {
   {/*from Dept id to get state and deoartment*/}
   const fetchData = async () => { 
     try {
-      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-dept-by-hospid', {
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-dept-by-hospid',  {
         hospitalId: hospitalId,
       });
       
@@ -71,20 +76,21 @@ const YourFormComponent =  ()  => {
       setDepartments(departments);
       setStates(states);
       console.log("Response", response?.data?.data)
-
+      setLoading(false); // Set loading to false once data is fetched
       console.log('departments:', departments);
       console.log('States:', states);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+
   {/*from stateId get cityId*/}
   const fetchCitiesByStateId = async (selectedStateId) => {
     try {
       // Ensure selectedStateId is an integer
       const stateIdInteger = parseInt(selectedStateId, 10); // Assuming base 10 for decimal numbers
   
-      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-city-by-stateid', {
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-city-by-stateid',     {
         stateId: stateIdInteger,
       });
   
@@ -101,10 +107,11 @@ const YourFormComponent =  ()  => {
       console.error('Error fetching cities:', error);
     }
   };
+
   {/*from hopsitId and DeptId geṭ Doctors list */}
   const fetchDoctorsByDepartment = async (departmentId) => {
     try {
-      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-doctors-by-hospdept', {
+      const response = await axios.post('http://192.168.29.66:8001/api/master/v1/get-doctors-by-hospdept',  {
         hospitalId: '1', // Replace with your hospital ID
         departmentId: '2',
       });
@@ -181,11 +188,11 @@ const YourFormComponent =  ()  => {
 
  
 // Example usage when a state is selected
- useEffect(() => {
-    if (selectedState !== '') {
-      fetchCitiesByStateId(selectedState);
-    }
-  }, [selectedState]);
+//  useEffect(() => {
+//     if (selectedState !== '') {
+//       fetchCitiesByStateId(selectedState);
+//     }
+//   }, [selectedState]);
 
   const steps = ['Personal Information', 'Doctor Details', 'Payment']; // Add step names here
 
@@ -195,6 +202,10 @@ const YourFormComponent =  ()  => {
       ...prevData,
       [name]: value,
     }));
+
+    // if(name == 'selectState'){
+    //   fetchCitiesByStateId(value)
+    // }
   };
 
    const handleSubmit = (e) => {
@@ -224,32 +235,68 @@ const YourFormComponent =  ()  => {
     dob : "" ,
     gender : "" , 
     address : "" ,
-    selectState : "" ,
-    selectCity : "" ,
-    postalCode : "" ,
+    selectState : formData?.selectstate ,
+    selectCity : formData?.selectcity ,
     email : "" ,
-    department : " " ,
-    fee : " " ,
+    department : formData?.department ,
+    doctor: formData?.doctor,
+    shift: formData?.shift,
+    fee : formData?.fee ,
+    preffereddate:''
   }
  
-    const validationSchema = yup.object({
+  const validationSchema = yup.object({
       // Define your validation schema for each field
       // Example: name should be required and a string
       name: yup.string().required('Name is required'),
       // Add validation for other fields as needed
-    });
+  });
 
-    const onSubmit = (values) => {
+  const submitFun = (values) => {
       console.log('Form data:', values);
       // Here, you can handle the form data, such as sending it to a server
-    };
+   };
 
     const formik = useFormik({
-      initialValues,
-      validationSchema,
-      onSubmit,
+      initialValues: initialValues,
+      validationSchema: validationSchema,
+      onSubmit: (values) => {
+        submitFun(values)
+      },
     });
+
+    //logic for currebt date not go to the backdate
+    const getCurrentDate = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      let month = now.getMonth() + 1; // January is 0
+      let day = now.getDate();
+  
+      // Pad single digit month/day with leading zero
+      if (month < 10) {
+        month = `0${month}`;
+      }
+      if (day < 10) {
+        day = `0${day}`;
+      }
+  
+      return `${year}-${month}-${day}`;
+    };
     
+    //logic for date 
+    const [selectedDate, setSelectedDate] = useState('');
+     const handleDateChange = (e) => {
+      const enteredDate = e.target.value;
+      const currentDate = getCurrentDate();
+  
+      if (enteredDate < currentDate) {
+        // Reset input value to the current date if a past date is entered
+        setSelectedDate(currentDate);
+      } else {
+        // Update selectedDate state if a valid (present or future) date is entered
+        setSelectedDate(enteredDate);
+      }
+    }
     const {  values, errors } = formik;
 
     const [orderData, setOrderData] = useState({});
@@ -271,6 +318,7 @@ const YourFormComponent =  ()  => {
     //payment Gateway 
     const initiatePayment = async () => {
       try {
+        setPayloading(true)
         const response = await axios.post(`http://192.168.29.66:8001/api/payment/v1/order`); // Replace with your endpoint
         console.log(response)
         const order = response.data; // Assuming the backend returns necessary order data
@@ -318,20 +366,39 @@ const YourFormComponent =  ()  => {
       } catch (error) {
         console.error('Error initiating payment:', error);
       }
+      finally {
+        setPayloading(false); // Set loading to false to hide the loader after the process completes
+      }
     };
   
   return (
   
-    <div className="">
-    <div className=" flex flex-auto justify-center md:mx-20 mx-4 my-4    ">
-    <div className=" max-w-screen-lg overflow-hidden rounded-t-xl bg-emerald-400/60 py-20 text-center shadow-xl shadow-gray-300">
-    <h3 className="mt-2 px-8 text-3xl font-bold text-white md:text-5xl"> Shree jagannath Hospital And Research Center </h3>
-    <p className="mt-6 text-2xl font-serif font-bold text-white  ">in collaboration with Symptoms Care </p>
-    <img className="absolute top-0 left-0 -z-10 h-full w-full object-cover opacity-100  " src={appoinent} alt="" />
+    <div className="m-4">
+    <div className="flex justify-center">
+    <div className="max-w-screen-lg overflow-hidden rounded-t-xl bg-emerald-400/60 py-20 text-center shadow-xl shadow-gray-300">
+      <div className="flex flex-col md:flex-row md:items-center justify-center">
+        <div className="flex items-center justify-center mb-4 md:mb-0 md:mr-2">
+          <img
+            className="h-22 w-22"
+            src={jagganath}
+            alt=""
+          />
+        </div>
+        <div className="flex flex-col md:text-left">
+          <h3 className="mt-2 text-3xl font-bold text-white md:text-5xl">Shree Jagannath Hospital And Research Center</h3>
+         <p className="mt-6 text-lg text-white font-semibold">
+          <span className="border-b-2 border-white">In collaboration with</span><br />
+          <span className="text-4xl font-bold">Symptoms Care</span>
+        </p>
+        </div>
+      </div>
+      <img className="absolute top-0 left-0 -z-10 h-full w-full object-cover opacity-100" src={appoinent} alt="" />
     </div>
-    </div>
-    <div className="max-w-screen-xl md:flex-row  rounded-xl mx-auto px-4 sm:px-6  lg:px-8 bg-slate-50   p-2 sm:my-2 sm:p-4 lg:my-4 lg:p-6 ">
-    <div className="flex flex-col sm:flex-row  items-center justify-between mb-6 ">
+  </div>
+  
+  
+    <div className="max-w-screen-xl md:flex-row rounded-xl mx-auto px-4 sm:px-6 md:my-2 lg:px-8 bg-slate-50   p-2 sm:my-2 sm:p-4 lg:my-4 lg:p-6 ">
+    <div className="flex flex-col sm:flex-row  items-center justify-between mb-6 md:my-2 gap-2 " >
     {steps.map((stepName, index) => (
     <div
     key={index}
@@ -343,17 +410,17 @@ const YourFormComponent =  ()  => {
     </div>
     ))}
      </div>
-      <div className="relative mb-4">
+      <div className="relative mb-4 ">
         <div className="h-2 bg-gray-200 rounded-full">
          <div
-  className={`absolute top-0 h-2 rounded-full bg-emerald-400/60 ${
-    step === 1 ? 'w-1/3' : step === 2 ? 'w-2/3' : step === 3 ? 'w-full' : ''
+        className={`absolute top-0 h-2 rounded-full bg-emerald-400/60 ${
+        step === 1 ? 'w-1/3' : step === 2 ? 'w-2/3' : step === 3 ? 'w-full' : ''
   }`}
 >
 </div>
         </div>
       </div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={formik.handleSubmit} onChange={formik.handleChange}>
         {step === 1 && (
           <>
          <h2 className='font-sans text-lg font-bold text-emerald-400/60 my-1'>Personal Information</h2>
@@ -372,19 +439,37 @@ const YourFormComponent =  ()  => {
            <option value="no">No</option>
          </select>
        </div>
-        {formData.additionalDetail === 'yes' && (
-        <div className="flex flex-col sm:w-1/2 lg:mr-1 sm:mr-1 ">
-          <label htmlFor="additionalInput" className="text-sm mb-1">MR NO.</label>
-          <input
-            type="text"
-            id="mrno"
-            name="mrno"
-            value={formData.additionalInput}
-            onChange={handleChange}
-            placeholder="Additional Input"
-            className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
-          />
-        </div>
+       {formData.additionalDetail === 'yes' && (
+        <>
+          <div className="flex flex-col sm:w-1/2 lg:mr-1 sm:mr-1">
+            <label htmlFor="mrno" className="text-sm mb-1">MR NO.</label>
+            <input
+              type="text"
+              id="mrno"
+              name="mrno"
+              value={formData.mrno}
+              onChange={handleChange}
+              placeholder="MR NO."
+              className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
+              required
+            />
+          </div>
+
+          {/* New input for Mobile No. */}
+          <div className="flex flex-col sm:w-1/2 lg:mr-1 sm:mr-1">
+            <label htmlFor="mobileNo" className="text-sm mb-1">Mobile No.</label>
+            <input
+              type="text"
+              id="mobileNo"
+              name="mobileNo"
+              value={formData.mobileNo}
+              onChange={handleChange}
+              placeholder="Mobile No."
+              className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
+              required
+            />
+          </div>
+        </>
       )}
      <div className="flex flex-col sm:w-1/2 sm:mr-1">
     <label htmlFor="input1" className="text-sm mb-1">Name </label>
@@ -392,7 +477,7 @@ const YourFormComponent =  ()  => {
       type="text"
       id="name"
       name="name"
-      value={formData.name}
+      value={formik.values.name}
       onChange={handleChange}
       placeholder="name"
       className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
@@ -409,6 +494,7 @@ const YourFormComponent =  ()  => {
       onChange={handleChange}
       placeholder="Input 2"
       className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
+      required 
      />
      </div>
          </div>
@@ -423,6 +509,7 @@ const YourFormComponent =  ()  => {
            onChange={handleChange}
            placeholder="Gender"
            className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
+           required 
          />
        </div>
      <div className="flex flex-col sm:w-1/2 sm:mr-1">
@@ -435,29 +522,30 @@ const YourFormComponent =  ()  => {
       onChange={handleChange}
       placeholder="Address "
       className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
+      required 
     />
   </div>
-  <div className="flex flex-col sm:w-1/2 sm:ml-1">
-    <label htmlFor="stateSelect" className="text-sm mb-1">Select State</label>
+       <div className="flex flex-col sm:w-1/2 sm:ml-1">
+   <label htmlFor="stateSelect" className="text-sm mb-1">Select State</label>
      <select
       id="stateSelect"
       name="selectstate"
       value={selectedState}
       onChange={handleStateChange}
       className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
-      <option value={formData.selectstate}>Select an option</option>
+      <option value={formik.values.selectState}>Select an option</option>
       {states.map((state) => (
         <option key={state.StateID} value={state.StateID}>
           {state.StateName}
         </option>
       ))}
     </select>
-  </div>
+        </div>
          </div>
          <div className='flex flex-col sm:flex-row'>
          <div className="flex flex-col sm:w-1/2 sm:ml-1 mr-2 ">
     <label htmlFor="citySelect" className="text-sm mb-1">Select City</label>
-    <select  name="selectcity" className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
+    <select  name="selectCity" className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"  style={{ color: 'black', backgroundColor: 'white' }}  >
     <option value={formData.selectcity}>Select City</option>
     {cities.map(city => (
       <option key={city.CityID} value={city.CityID}>
@@ -496,9 +584,7 @@ const YourFormComponent =  ()  => {
             {/* Add more inputs for Step 1 */}
           </>
         )}
-
-        {/* Add other steps similarly */}
-
+       {/* Add other steps similarly */}
         {step === 2 && (
           <>
             <h2 className='font-sans text-lg font-bold text-emerald-400/60 my-1'>Doctor Details</h2>
@@ -558,7 +644,13 @@ const YourFormComponent =  ()  => {
        <div className='flex flex-col sm:flex-row'>
           <div className="flex flex-col sm:w-1/2 sm:ml-1">
           <label htmlFor="input2" className="text-sm mb-1">Select Prefered Date  </label>
-        <input type='date' className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"></input>
+          <input
+          type='date'
+          className="border border-gray-300 rounded-md py-2 px-3 mb-2 w-full"
+          value={selectedDate}
+          onChange={handleDateChange}
+          min={getCurrentDate()} // Use the function to set the min attribute
+        />
            </div>
        
           </div>
@@ -568,8 +660,16 @@ const YourFormComponent =  ()  => {
        {
         step ===3 && (
           <>
-          <div className='flex flex-auto justify-center md:mx-20 mx-4 my-4 '>
-          <button className=' bg-red-500 flex   hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' onClick={initiatePayment}>Pay with Razorpay</button>
+          <div className="flex items-center justify-center "> {/* Center the button */}
+          {payloading && <div className="loader"> </div>} {/* Display loader when payloading is true */}
+          <button
+            className='bg-red-500 flex hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            onClick={initiatePayment}
+            disabled={payloading} // Disable the button when payloading is true to prevent multiple clicks
+                  style={{ marginLeft: '10px' }} // Add some margin to the right side of the button
+          >
+            Pay with Razorpay
+          </button>
         </div>
           </>
           )
@@ -586,9 +686,10 @@ const YourFormComponent =  ()  => {
             </button>
           )}
           {step === steps.length && (
-            <button type="submit" className="bg-emerald-400/60 text-gray-500 font-semibold px-4 py-2 rounded-md">
+            <button type="submit"  className="bg-emerald-400/60 text-gray-500 font-semibold px-4 py-2 rounded-md">
               Submit
             </button>
+            
           )}
         </div>
       </form>
