@@ -33,6 +33,7 @@ Route::group(['middleware' => ['api.key']], function () {
         Route::post('master/v1/get-doctors-by-hospdept', 'getConsultantsByHospDeptId');  // 02
         Route::post('master/v1/get-shifts-by-hospconsultant', 'getShiftsByHospDoctorId');  // 03
         Route::post('master/v1/get-city-by-stateid', 'readCitiesByStates'); // 04
+        Route::post('master/v1/get-patients', 'readPatientsBySearchParams');          // 05
     });
 
     /**
@@ -53,7 +54,7 @@ Route::group(['middleware' => ['api.key']], function () {
     /**
      * | Controller - 04
      */
-    Route::controller(UserController::class)->group(function(){
+    Route::controller(UserController::class)->group(function () {
         Route::post('register', 'createUser'); // 01
         Route::post('login', 'loginAuth'); // 02
         Route::post('logout', 'logout')->middleware('auth:sanctum'); //03
