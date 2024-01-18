@@ -15,7 +15,7 @@ class ApiKeyMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        return $next($request);
+        return $next($request);                 // Avoid return and take it to last line when frontend will implement the api key
 
         $apiKey = getenv('API_KEY');
         // Returns boolean
